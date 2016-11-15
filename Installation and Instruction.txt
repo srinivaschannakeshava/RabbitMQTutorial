@@ -1,0 +1,81 @@
+Installation
+
+--> Install erlang first + Set ERLANG_HOME  C:\Program Files\erlx.x.x + path %ERLANG_HOME%\bin
+--> Donwload RabbitMQ server and extract to a folder. 
+	Starting the broker
+	--> In *sbin* folder Rabbitmq-server.bat starts the broker as an application.
+	-->	rabbitmq-service.bat manages the service and starts the broker.
+	-->rabbitmqctl.bat manages a running broker.
+			rabbitmqctl [-n node] [-t timeout] [-q] {command} [command options...]
+			ex:- Stopping the Broker
+						rabbitmqctl stop
+				 Logging logs	
+						rabbitmqctl rotate_logs	
+	--> Enabling Management Plugin
+			rabbitmq-plugins enable rabbitmq_management
+			
+			The web UI is located at: http://server-name:15672/
+			
+	--> RabbitMQ provides three general ways to customise the server:
+		-->Environmental variable
+		--> configuration file
+				create rabbitmq.config file at a location and add RABBITMQ_CONFIG_FILE environment variable 
+					with path of the rabbitmq.config without .config 
+		-->runtime parameters and policies
+				defines cluster-wide settings which can change at run time
+				
+				
+---------------------------------------------------------------------------------------------------------------------------------------
+
+									producer --> RabbitMQ Queues ---> consumer
+									
+	Queues --> The message channel .	
+			--> durable - the queue will survive a server restart.
+			-->	exclusive - restricted to this connection.
+			-->autoDelete - server will delete it when no longer in use.
+				ex:- channel.queueDeclare(queueName, true, false, false, null);
+			-->Channel Prefetch Setting (QoS) --> limit the number of unack messages over air to a consumer.
+				-->channel.basicQos(5)
+				
+	messages--> The data published
+			-->make sure a message is never lost . RabbitMQ supports message acknowledgments
+					ex:-    channel.basicConsume(TASK_QUEUE_NAME, AckBool, consumer);
+							channel.basicAck(envelope.getDeliveryTag(), false);
+					
+			-->making message duarable even on server restart	
+					ex:- channel.basicPublish("", "task_queue",MessageProperties.PERSISTENT_TEXT_PLAIN,message.getBytes());
+	
+	Publish/Subscribe using RabbitMQ
+						producer --> exchange --> multiple queues
+			-->Exchanges - On one side it receives messages from producers and the other side it pushes them to queues.
+				Exchange must know what to do with a message it received 
+					--> appended to a particular queue
+					--> appended to many queues
+					--> should it get discarded
+				Types of Exchanges - direct, topic, headers and fanout
+					ex:- rabbitmqctl list_exchanges
+					
+					Fanout Exchange- IT broadcast all the messages it receives to all the queues.
+						Routing - subscribe only to a subset of the messages
+							--> Bindings - A binding is a relationship between an exchange and a queue.
+						
+					Direct Exchange - A message goes to the queues whose binding key exactly matches the routing key of the message.
+						ex:- exchangeChannel.exchangeDeclare("direct_logs", "direct");
+							 exchangeChannel.basicPublish(exchangeName, bindingKey, null, message);
+							 
+							 exchangeChannel.queueBind(queueName, exchangeName, bindingKey);
+					
+					Topic Exchange - provides wild card subscription
+							--> * (star) can substitute for exactly one word.
+							-->	# (hash) can substitute for zero or more words.
+							ex:- bindings key would be like "*.orange.*" , "*.*.rabbit" ,  "lazy.#"
+							
+					Remote procedure call (RPC)
+					
+			
+							
+				
+				
+				
+--> clustering RabbitMQ (ReplicaSet)
+		-->
